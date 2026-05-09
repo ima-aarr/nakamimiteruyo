@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>miruyatu</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input[type="url"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #004494;
+        }
+        #status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .error {
+            color: #d9534f;
+        }
+        .success {
+            color: #5cb85c;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 500px;
+        }
+        code {
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Webサイト ソースコードビューア</h2>
+    <p>ソースコードを確認したいURL（https://...）を入力してください。</p>
+    
+    <div class="input-group">
+        <input type="url" id="targetUrl" placeholder="https://example.com" required>
+        <button onclick="fetchSource()">ソースを取得</button>
+    </div>
+    
+    <div id="status"></div>
+    
+    <pre><code id="sourceCode">ここにソースコードが表示されます...</code></pre>
+</div>
+
+<script>
+    async function fetchSource() {
+        const urlInput = document.getElementById('targetUrl').value;
+        const sourceCodeElement = document.getElementById('sourceCode');
+        const statusElement = document.getElementById('status');
+
+        if (!urlInput || !urlInput.startsWith('http')) {
+            statusElement.textContent = "有効なURL（http:// または https:// から始まる）を入力してください。";
+            statusElement.className = "error";
+            return;
+        }
+
+        statusElement.textContent = "取得中...";
+        statusElement.className = "";
+        sourceCodeElement.textContent = "";
+
+        /
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlInput)}`;
+
+        try {
+            const response = await fetch(proxyUrl);
+            
+            if (!response.ok) {
+                throw new Error("ネットワークエラーが発生しました。");
+            }
+            
+            const data = await response.json();
+            
+            if (data.contents) {
+              
+                sourceCodeElement.textContent = data.contents;
+                statusElement.textContent = "取得完了しました！";
+                statusElement.className = "success";
+            } else {
+                 throw new Error("コンテンツを取得できませんでした。");
+            }
+        } catch (error) {
+            statusElement.textContent = `エラー: ${error.message}`;
+            statusElement.className = "error";
+            sourceCodeElement.textContent = "取得に失敗しました。対象サイトがアクセスを拒否しているか、存在しない可能性があります。";
+        }
+    }
+</script>
+
+</body>
+</html>
